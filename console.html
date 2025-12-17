@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cofihost — Server Console</title>
+    <meta name="description" content="Cofihost server console — view logs, send commands, and monitor server status." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+      :root{--bg:#071023;--panel:#0e1624;--accent:#7dd3fc;--muted:#9aa6bd}
+      *{box-sizing:border-box}
+      html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#051025,#071829);color:#eaf4ff}
+      .wrap{max-width:1200px;margin:28px auto;padding:18px}
+      header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+      header h1{font-size:18px;margin:0}
+      .layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
+      .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+      .controls{display:flex;gap:8px;margin-bottom:10px}
+      .btn{background:var(--accent);color:#05233a;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+      .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:7px 9px;border-radius:8px}
+      #console{height:520px;overflow:auto;background:#051220;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:monospace;font-size:13px;color:#d8eefc}
+      .log-line{line-height:1.5}
+      .cmd-input{display:flex;gap:8px;margin-top:10px}
+      input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+      .status{display:flex;flex-direction:column;gap:10px}
+      .stat{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px}
+      .players{max-height:220px;overflow:auto}
+      .muted{color:var(--muted);font-size:13px}
+      @media (max-width:900px){.layout{grid-template-columns:1fr} #console{height:360px}}
+
+      /* Sidebar tabs and file viewer styles */
+      .sidebar-tabs{display:flex;gap:6px;margin-bottom:10px}
+      .tab{flex:1;padding:8px 10px;border-radius:8px;text-align:center;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer;color:var(--muted)}
+      .tab.active{background:rgba(125,211,252,0.08);color:var(--accent);border-color:rgba(125,211,252,0.12);font-weight:700}
+      .file-browser{background:rgba(255,255,255,0.01);padding:8px;border-radius:8px;max-height:260px;overflow:auto}
+      .file-item{padding:6px 8px;border-radius:6px;cursor:pointer}
+      .file-item:hover{background:rgba(255,255,255,0.02)}
+      .editor{margin-top:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);overflow:hidden}
+      .editor-tabs{display:flex;gap:6px;padding:8px;background:rgba(255,255,255,0.01)}
+      .editor-tab{padding:6px 10px;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+      .editor-tab.active{background:rgba(255,255,255,0.02);color:var(--accent);font-weight:700}
+      .editor-area{background:#02101a;padding:8px}
+      .editor-area textarea{width:100%;height:180px;background:transparent;border:0;color:#d8eefc;font-family:monospace;padding:8px;resize:vertical}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Cofihost Console • server.example</h1>
+        <div class="muted">Connected as <strong>admin</strong></div>
+      </header>
+
+      <div class="layout">
+        <div>
+          <div class="panel">
+            <div class="controls">
+              <button class="btn" id="startBtn">Start</button>
+              <button class="btn-ghost" id="stopBtn">Stop</button>
+              <button class="btn-ghost" id="restartBtn">Restart</button>
+              <button class="btn-ghost" id="clearBtn">Clear</button>
+              <label style="margin-left:auto" class="muted"><input type="checkbox" id="autoscroll" checked> Autoscroll</label>
+            </div>
+
+            <div id="console" aria-live="polite" role="log"></div>
+
+            <div class="cmd-input">
+              <input id="command" type="text" placeholder="Type a server command (e.g. say Hello!)" aria-label="Command input">
+              <button class="btn" id="sendCmd">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="panel">
+            <div class="sidebar-tabs">
+              <div class="tab active" data-view="status" id="tabStatus">Status</div>
+              <div class="tab" data-view="files" id="tabFiles">Files</div>
+            </div>
+
+            <div id="viewStatus">
+              <div class="status">
+                <div class="stat">
+                  <div class="muted">Server Status</div>
+                  <div id="srvStatus" style="font-weight:800;color:var(--accent);">Stopped</div>
+                </div>
+
+                <div class="stat">
+                  <div class="muted">Resources</div>
+                  <div id="cpu" style="font-weight:700">CPU: 0%</div>
+                  <div id="ram" style="font-weight:700">RAM: 0 / 8192 MB</div>
+                </div>
+
+                <div class="stat">
+                  <div class="muted">Players</div>
+                  <div class="players" id="players">
+                    <div class="muted">No players online</div>
+                  </div>
+                </div>
+
+                <div class="stat">
+                  <div class="muted">Uptime</div>
+                  <div id="uptime">00:00:00</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="viewFiles" style="display:none">
+              <div class="muted" style="margin-bottom:8px">Server Files</div>
+              <div class="file-browser" id="fileBrowser">
+                <!-- file items inserted by JS -->
+              </div>
+
+              <div class="editor" id="fileEditor">
+                <div class="editor-tabs" id="editorTabs">
+                  <!-- open file tabs -->
+                </div>
+                <div class="editor-area">
+                  <textarea id="editorArea" placeholder="Open a file to view/edit its contents"></textarea>
+                </div>
+                <div style="display:flex;gap:8px;padding:8px;justify-content:space-between">
+                  <div class="muted">Local demo file viewer — changes are not persisted.</div>
+                  <div>
+                    <button class="btn-ghost" id="downloadFile">Download</button>
+                    <button class="btn" id="saveFile">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const consoleEl = document.getElementById('console');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const sendCmd = document.getElementById('sendCmd');
+      const cmdInput = document.getElementById('command');
+      const srvStatus = document.getElementById('srvStatus');
+      const cpuEl = document.getElementById('cpu');
+      const ramEl = document.getElementById('ram');
+      const playersEl = document.getElementById('players');
+      const uptimeEl = document.getElementById('uptime');
+      const autoscroll = document.getElementById('autoscroll');
+
+      let running = false;
+      let uptime = 0;
+      let logInterval;
+
+      function appendLog(text, cls){
+        const div = document.createElement('div');
+        div.className = 'log-line';
+        if(cls) div.style.color = cls;
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        consoleEl.appendChild(div);
+        if(autoscroll.checked) consoleEl.scrollTop = consoleEl.scrollHeight;
+      }
+
+      const API_BASE = '/api'; // change if your server exposes a different base path
+
+      async function apiFetchJson(path, opts){
+        const res = await fetch(path, opts);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = res.headers.get('content-type') || '';
+        if(ct.includes('application/json')) return res.json();
+        return res.text();
+      }
+
+      async function startServer(){
+        if(running) return;
+        srvStatus.textContent = 'Starting...';
+        appendLog('Sending start request...', '#a7f3d0');
+        try{
+          const data = await apiFetchJson(`${API_BASE}/server/start`, {method:'POST'});
+          appendLog((data && data.message) || 'Server started', '#7df3fc');
+          running = true;
+          srvStatus.textContent = 'Running';
+          startLogStream();
+        }catch(err){
+          appendLog('Start request failed — using local fallback: '+err.message, '#f59e0b');
+          // fallback to local simulation
+          fallbackStart();
+        }
+      }
+
+      async function stopServer(){
+        if(!running) return;
+        srvStatus.textContent = 'Stopping...';
+        appendLog('Sending stop request...', '#fca5a5');
+        try{
+          const data = await apiFetchJson(`${API_BASE}/server/stop`, {method:'POST'});
+          appendLog((data && data.message) || 'Server stopped', '#fca5a5');
+          running = false;
+          srvStatus.textContent = 'Stopped';
+          stopLogStream();
+        }catch(err){
+          appendLog('Stop request failed — using local fallback: '+err.message, '#f59e0b');
+          fallbackStop();
+        }
+      }
+
+      async function restartServer(){
+        appendLog('Sending restart request...', '#ffd580');
+        try{
+          const data = await apiFetchJson(`${API_BASE}/server/restart`, {method:'POST'});
+          appendLog((data && data.message) || 'Server restarted', '#ffd580');
+          // server will send logs as normal
+        }catch(err){
+          appendLog('Restart request failed — using local fallback: '+err.message, '#f59e0b');
+          fallbackRestart();
+        }
+      }
+
+      function simulateLogs(){
+        const samples = [
+          'Saving chunks',
+          'Player joined the game: Notch',
+          'Player left the game: Steve',
+          'Performed an auto-save',
+          'Ticking entity: Zombie',
+          'Loaded world spawn',
+          'Completed garbage collection'
+        ];
+        const s = samples[Math.floor(Math.random()*samples.length)];
+        appendLog(s);
+        // update resource usage
+        const cpu = Math.floor(5 + Math.random()*35);
+        const ramUsed = Math.floor(1024 + Math.random()*4096);
+        cpuEl.textContent = `CPU: ${cpu}%`;
+        ramEl.textContent = `RAM: ${ramUsed} / 8192 MB`;
+        // update players list
+        const online = Math.random() > 0.6 ? Math.floor(Math.random()*6)+1 : 0;
+        if(online>0){
+          playersEl.innerHTML = '';
+          for(let i=0;i<online;i++){const p=document.createElement('div');p.textContent='Player'+(i+1);playersEl.appendChild(p)}
+        } else { playersEl.innerHTML = '<div class="muted">No players online</div>' }
+      }
+
+      // --- real log streaming via EventSource, with simulated fallback ---
+      let logSource = null;
+      let uptimeTimer = null;
+
+      function startLogStream(){
+        // try EventSource (server should provide SSE at /api/logs/stream)
+        try{
+          if(typeof EventSource !== 'undefined'){
+            logSource = new EventSource(`${API_BASE}/logs/stream`);
+            logSource.onmessage = (e)=>{ appendLog(e.data); };
+            logSource.onerror = ()=>{ appendLog('Log stream error, falling back to polling', '#f59e0b'); startFallbackLogs(); };
+            // periodically fetch status/resources
+            pollStatus();
+            return;
+          }
+        }catch(err){ appendLog('SSE not available: '+err.message, '#f59e0b'); }
+        // fallback
+        startFallbackLogs();
+      }
+
+      function stopLogStream(){
+        if(logSource){ logSource.close(); logSource = null; }
+        clearInterval(logInterval); clearInterval(uptimeTimer);
+      }
+
+      function startFallbackLogs(){
+        logInterval = setInterval(simulateLogs, 1200);
+        uptime = 0;
+        uptimeTimer = setInterval(()=>{uptime++; updateUptime();},1000);
+      }
+
+      function stopFallbackLogs(){ clearInterval(logInterval); clearInterval(uptimeTimer); }
+
+      function fallbackStart(){
+        running = true; srvStatus.textContent = 'Running'; appendLog('Server started (local fallback).', '#7df3fc'); startFallbackLogs();
+      }
+      function fallbackStop(){ running=false; srvStatus.textContent='Stopped'; appendLog('Server stopped (local fallback).', '#fca5a5'); stopFallbackLogs(); }
+      function fallbackRestart(){ appendLog('Restarting (local fallback)...', '#ffd580'); fallbackStop(); setTimeout(fallbackStart,800); }
+
+      function updateUptime(){
+        const h = String(Math.floor(uptime/3600)).padStart(2,'0');
+        const m = String(Math.floor(uptime%3600/60)).padStart(2,'0');
+        const s = String(uptime%60).padStart(2,'0');
+        uptimeEl.textContent = `${h}:${m}:${s}`;
+      }
+
+      startBtn.addEventListener('click', startServer);
+      stopBtn.addEventListener('click', stopServer);
+      restartBtn.addEventListener('click', restartServer);
+      clearBtn.addEventListener('click', ()=>{consoleEl.innerHTML=''; appendLog('Console cleared.', '#98a6b8')});
+
+      sendCmd.addEventListener('click', async ()=>{
+        const v = cmdInput.value.trim();
+        if(!v) return;
+        appendLog(`> ${v}`, '#ffd580');
+        cmdInput.value = '';
+        try{
+          const data = await apiFetchJson(`${API_BASE}/command`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:v})});
+          if(typeof data === 'string') appendLog(data, '#c7f9d4');
+          else appendLog(data.output||data.message||'Command sent', '#c7f9d4');
+        }catch(err){ appendLog('Command failed — local fallback: '+err.message, '#f59e0b'); setTimeout(()=>appendLog(`Executed command: ${v}`, '#c7f9d4'), 400); }
+      });
+
+      cmdInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ sendCmd.click(); }});
+
+      // initial sample lines
+      appendLog('Console ready. Use the controls to start the server.', '#98a6b8');
+
+      // --- Files tab functionality (connected to backend) ---
+      const tabStatus = document.getElementById('tabStatus');
+      const tabFiles = document.getElementById('tabFiles');
+      const viewStatus = document.getElementById('viewStatus');
+      const viewFiles = document.getElementById('viewFiles');
+      const fileBrowser = document.getElementById('fileBrowser');
+      const editorTabs = document.getElementById('editorTabs');
+      const editorArea = document.getElementById('editorArea');
+      const saveFileBtn = document.getElementById('saveFile');
+      const downloadFileBtn = document.getElementById('downloadFile');
+
+      let files = {}; // populated from API
+      let openTabs = []; // {path, content}
+      let activePath = null;
+
+      async function apiListFiles(){
+        try{
+          const data = await apiFetchJson(`${API_BASE}/files`);
+          if(Array.isArray(data)) return data;
+          // if backend returns {files: [...]}
+          if(data && Array.isArray(data.files)) return data.files;
+          throw new Error('Unexpected file list format');
+        }catch(err){ appendLog('Listing files failed: '+err.message+' — using fallback sample', '#f59e0b'); return Object.keys({
+          'server.properties':1,'ops.json':1,'whitelist.json':1,'plugins/essentials/config.yml':1,'logs/latest.log':1
+        }); }
+      }
+
+      async function renderFileBrowser(){
+        fileBrowser.innerHTML = '<div class="muted">Loading…</div>';
+        const list = await apiListFiles();
+        fileBrowser.innerHTML = '';
+        list.forEach(p=>{
+          const el = document.createElement('div');
+          el.className = 'file-item';
+          el.textContent = p;
+          el.addEventListener('click', ()=>openFile(p));
+          fileBrowser.appendChild(el);
+        });
+      }
+
+      async function openFile(path){
+        const existing = openTabs.find(t=>t.path===path);
+        if(!existing){
+          // fetch content from server
+          try{
+            const data = await apiFetchJson(`${API_BASE}/file?path=${encodeURIComponent(path)}`);
+            const content = (data && data.content) ? data.content : (typeof data === 'string' ? data : '');
+            openTabs.push({path, content});
+          }catch(err){
+            appendLog('Failed to load file: '+err.message+' — opening empty buffer', '#f59e0b');
+            openTabs.push({path, content: ''});
+          }
+        }
+        setActiveTab(path);
+        renderTabs();
+      }
+
+      function renderTabs(){
+        editorTabs.innerHTML = '';
+        openTabs.forEach(t=>{
+          const d = document.createElement('div');
+          d.className = 'editor-tab'+(t.path===activePath?' active':'');
+          d.textContent = t.path.split('/').pop();
+          d.title = t.path;
+          d.addEventListener('click', ()=>setActiveTab(t.path));
+          // close button
+          const close = document.createElement('button');
+          close.textContent = '×';
+          close.style.marginLeft='8px'; close.style.background='transparent'; close.style.border='0'; close.style.color='var(--muted)'; close.style.cursor='pointer';
+          close.addEventListener('click', (e)=>{ e.stopPropagation(); closeTab(t.path); });
+          d.appendChild(close);
+          editorTabs.appendChild(d);
+        });
+      }
+
+      function setActiveTab(path){
+        activePath = path;
+        const tab = openTabs.find(t=>t.path===path);
+        editorArea.value = tab ? tab.content : '';
+        renderTabs();
+      }
+
+      function closeTab(path){
+        openTabs = openTabs.filter(t=>t.path!==path);
+        if(activePath===path){ activePath = openTabs.length?openTabs[openTabs.length-1].path:null; }
+        setActiveTab(activePath);
+      }
+
+      saveFileBtn.addEventListener('click', async ()=>{
+        if(!activePath) return alert('No file open');
+        const tab = openTabs.find(t=>t.path===activePath);
+        tab.content = editorArea.value;
+        try{
+          await apiFetchJson(`${API_BASE}/file`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:activePath,content:tab.content})});
+          appendLog(`Saved ${activePath}`, '#c7f9d4');
+        }catch(err){
+          appendLog('Save failed: '+err.message+' — changes saved locally', '#f59e0b');
+        }
+      });
+
+      downloadFileBtn.addEventListener('click', async ()=>{
+        if(!activePath) return alert('No file open');
+        // try server-provided download endpoint first
+        try{
+          const res = await fetch(`${API_BASE}/file/download?path=${encodeURIComponent(activePath)}`);
+          if(!res.ok) throw new Error('Download failed');
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = activePath.split('/').pop(); a.click(); URL.revokeObjectURL(url);
+          return;
+        }catch(err){
+          // fallback to client-side content download
+          const content = editorArea.value;
+          const blob = new Blob([content], {type:'text/plain'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = activePath.split('/').pop(); a.click(); URL.revokeObjectURL(url);
+        }
+      });
+
+      tabStatus.addEventListener('click', ()=>{ tabStatus.classList.add('active'); tabFiles.classList.remove('active'); viewStatus.style.display='block'; viewFiles.style.display='none'; });
+      tabFiles.addEventListener('click', async ()=>{ tabFiles.classList.add('active'); tabStatus.classList.remove('active'); viewStatus.style.display='none'; viewFiles.style.display='block'; await renderFileBrowser(); });
+
+      // initialize file browser (try to load from backend)
+      (async ()=>{ await renderFileBrowser(); })();
+    </script>
+  </body>
+</html>

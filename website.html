@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Cofihost — Minecraft Hosting</title>
+		<meta name="description" content="Cofihost: fast, reliable Minecraft server hosting with instant setup, DDoS protection, and friendly support." />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+		<style>
+			:root{
+				--bg:#0b1020;
+				--card:#0f1724;
+				--accent:#7dd3fc;
+				--accent-2:#60a5fa;
+				--muted:#98a0b3;
+				--glass: rgba(255,255,255,0.03);
+			}
+			*{box-sizing:border-box}
+			html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,#071023 0%,#071b2d 60%);color:#e6eef8}
+			a{color:var(--accent)}
+			header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;backdrop-filter:blur(6px)}
+			.brand{display:flex;align-items:center;gap:12px}
+			.logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;border-radius:8px;font-weight:800;font-family:'Press Start 2P',monospace;color:#05233a}
+			nav{display:flex;gap:18px;align-items:center}
+			nav a{color:var(--muted);text-decoration:none;font-weight:600}
+			.container{max-width:1100px;margin:0 auto;padding:36px}
+			.hero{display:grid;grid-template-columns:1fr 420px;gap:32px;align-items:center;margin-top:28px}
+			.hero h1{font-size:34px;margin:0 0 12px;line-height:1.02}
+			.hero p{color:var(--muted);margin:0 0 18px}
+			.cta{display:flex;gap:12px}
+			.btn{background:var(--accent);color:#05233a;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700}
+			.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:11px 16px;border-radius:10px;color:var(--muted)}
+			.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+			.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+			.feature{padding:14px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+			.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+			.plan{padding:18px;border-radius:12px;background:linear-gradient(180deg,#07131f,#071826);border:1px solid rgba(255,255,255,0.03)}
+			.plan h3{margin:0 0 6px}
+			.price{font-size:28px;font-weight:800;color:var(--accent);margin:10px 0}
+			.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+			footer{margin-top:48px;padding:28px 0;color:var(--muted);border-top:1px solid rgba(255,255,255,0.02)}
+			.small{font-size:13px}
+			@media (max-width:900px){
+				.hero{grid-template-columns:1fr;}
+				.features{grid-template-columns:1fr}
+				.plans{grid-template-columns:1fr}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="brand">
+				<div class="logo">C</div>
+				<div>
+					<div style="font-weight:800">Cofihost</div>
+					<div style="font-size:12px;color:var(--muted)">Minecraft Hosting</div>
+				</div>
+			</div>
+			<nav>
+				<a href="#features">Features</a>
+				<a href="#plans">Plans</a>
+				<a href="#faq">FAQ</a>
+				<a class="btn" href="#get-started">Get Started</a>
+			</nav>
+		</header>
+
+		<main class="container">
+			<section class="hero">
+				<div>
+					<div class="panel">
+						<h1>Fast, reliable Minecraft servers — instant setup.</h1>
+						<p>Spin up a server in seconds with DDoS protection, automated backups, 24/7 support, and full modpack compatibility. Perfect for friends, communities, and public servers.</p>
+						<div class="cta">
+							<a class="btn" id="get-started" href="#plans">Start Your Server</a>
+							<a class="btn-ghost" href="#features">See Features</a>
+						</div>
+					</div>
+
+					<div class="features" id="features">
+						<div class="feature">
+							<strong>Instant Setup</strong>
+							<div class="small">Create and join in under a minute.</div>
+						</div>
+						<div class="feature">
+							<strong>DDoS Protection</strong>
+							<div class="small">Enterprise-grade network security included.</div>
+						</div>
+						<div class="feature">
+							<strong>One-Click Mods</strong>
+							<div class="small">Install modpacks, plugins, and more with a click.</div>
+						</div>
+					</div>
+				</div>
+
+				<aside>
+					<div class="panel">
+						<h3 style="margin-top:0">Popular: 4 GB RAM</h3>
+						<div style="color:var(--muted)">Great for small communities (10–20 players)</div>
+						<div class="price">$8/mo</div>
+						<a class="btn" href="#get-started">Launch Server</a>
+						<div style="margin-top:12px;color:var(--muted);font-size:13px">Trusted by hundreds of communities — 99.99% uptime.</div>
+					</div>
+				</aside>
+			</section>
+
+			<section style="margin-top:28px">
+				<h2 style="margin:0 0 12px">Hosting Plans</h2>
+				<div class="small" style="color:var(--muted);margin-bottom:12px">Monthly billing. Discount for yearly plans.</div>
+				<div class="plans" id="plans">
+					<div class="plan">
+						<h3>Starter</h3>
+						<div class="small">2 GB RAM • 20 GB SSD • 6 slots</div>
+						<div class="price">$5/mo</div>
+						<div style="margin-top:12px"><a class="btn" href="#get-started">Choose</a></div>
+					</div>
+					<div class="plan">
+						<h3>Popular</h3>
+						<div class="small">4 GB RAM • 40 GB SSD • 12 slots</div>
+						<div class="price">$8/mo</div>
+						<div style="margin-top:12px"><a class="btn" href="#get-started">Choose</a></div>
+					</div>
+					<div class="plan">
+						<h3>Pro</h3>
+						<div class="small">8 GB RAM • 80 GB SSD • 30 slots</div>
+						<div class="price">$16/mo</div>
+						<div style="margin-top:12px"><a class="btn" href="#get-started">Choose</a></div>
+					</div>
+				</div>
+			</section>
+
+			<section style="margin-top:28px">
+				<h2>Why choose Cofihost?</h2>
+				<div class="grid-2" style="margin-top:12px">
+					<div class="panel">
+						<h4 style="margin:0 0 8px">Performance</h4>
+						<div class="small">NVMe storage, low-latency network, and tailored Java optimizations to keep your world smooth even with many players.</div>
+					</div>
+					<div class="panel">
+						<h4 style="margin:0 0 8px">Support</h4>
+						<div class="small">Friendly, knowledgeable staff available 24/7 through chat and ticketing—modpack help included.</div>
+					</div>
+				</div>
+			</section>
+
+			<section style="margin-top:28px" id="faq">
+				<h2>FAQ</h2>
+				<div style="margin-top:12px" class="small">
+					<strong>Do you support modpacks?</strong>
+					<div style="color:var(--muted);margin-bottom:10px">Yes — Forge, Fabric, and curated modpacks (one-click installs).</div>
+
+					<strong>Can I upgrade later?</strong>
+					<div style="color:var(--muted);margin-bottom:10px">Absolutely — upgrade and downgrade instantly with no downtime.</div>
+
+					<strong>How long are backups kept?</strong>
+					<div style="color:var(--muted);margin-bottom:10px">Automatic daily backups, retained for 14 days. Manual snapshots available.</div>
+				</div>
+			</section>
+
+			<footer>
+				<div class="grid-2">
+					<div>
+						<strong>Cofihost</strong>
+						<div class="small" style="color:var(--muted);margin-top:8px">© 2025 Cofihost — Built for Minecraft communities.</div>
+					</div>
+					<div style="text-align:right">
+						<div class="small">Contact: <a href="mailto:support@cofihost.example">support@cofihost.example</a></div>
+						<div class="small" style="margin-top:8px">Status: <span style="color:var(--accent)">Operational</span></div>
+					</div>
+				</div>
+			</footer>
+		</main>
+
+		<script>
+			// Minimal interactivity placeholder
+			document.querySelectorAll('a[href="#get-started"]').forEach(a=>a.addEventListener('click', e=>{
+				e.preventDefault();
+				window.location.hash = '#plans';
+				const el = document.getElementById('plans');
+				if(el) el.scrollIntoView({behavior:'smooth'});
+			}));
+		</script>
+	</body>
+</html>
